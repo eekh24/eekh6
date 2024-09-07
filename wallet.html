@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-image: url(cakeBackground.jpg);
+        }
+
+        .wallet-info {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+        }
+
+        .amount {
+            font-weight: bold;
+        }
+
+        .transaction-history {
+            margin-top: 20px;
+        }
+
+        .transaction {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .transaction p {
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <img onclick="goToLogin()" src="backImage.jpg" alt=""
+        style="height: 50px;width: 50px;  margin-top: 10px; align-self: center;">
+    <div id="walletInfo" class="wallet-info"></div>
+    <div id="transactionHistory" class="transaction-history"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDjpg5dNL6R44dPpoDQabNaT8tLVmVWTQQ",
+            authDomain: "eekh-website.firebaseapp.com",
+            projectId: "eekh-website",
+            storageBucket: "eekh-website.appspot.com",
+            messagingSenderId: "276234231567",
+            appId: "1:276234231567:web:1509267f60d97a83cea87a",
+            measurementId: "G-QX5HCKXMDK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadWalletInfo() {
+            const queryParams = new URLSearchParams(window.location.search);
+            const mobile = queryParams.get('mobile');
+
+            function goToLogin() {
+                window.location.href = `login.html?mobile=${mobile}`;
+            }
+            window.goToLogin = goToLogin;
+
+            if (!mobile) {
+                document.getElementById('walletInfo').innerHTML = '<p>No mobile number provided.</p>';
+                return;
+            }
+
+            try {
+                // Fetch user wallet information
+                const walletRef = doc(db, 'users', mobile);
+                const walletSnap = await getDoc(walletRef);
+
+                if (walletSnap.exists()) {
+                    const walletData = walletSnap.data();
+                    const referralAmount = walletData.referralAmount || 0;
+                    let transactions = walletData.walletHistory || [];
+
+                    // Sort transactions by date in descending order (latest first)
+                    transactions = transactions.sort((a, b) => b.date.seconds - a.date.seconds);
+
+                    // Display the referral amount
+                    const walletInfo = `
+                <p><strong>Referral Amount:</strong> ₹${referralAmount}</p>
+            `;
+                    document.getElementById('walletInfo').innerHTML = walletInfo;
+
+                    // Display the transaction history
+                    if (transactions.length > 0) {
+                        let historyHTML = '<h3>Transaction History</h3>';
+                        transactions.forEach(transaction => {
+                            const readableDate = transaction.date.toDate().toLocaleString(); // Convert timestamp to readable date
+                            historyHTML += `
+                        <div class="transaction">
+                            <p><strong class="transactionType">${transaction.type}</strong></p>
+                            <p><strong>Amount:</strong> ₹${transaction.amount}</p>
+                            <p><strong>Date:</strong> ${readableDate}</p>
+                            <p><strong>Reason:</strong> ${transaction.reason}</p>
+                            <p><strong style="color: green">Previous Balance:</strong> ₹${transaction.previousBalance || "Some Error"}</p>
+                        </div>
+                    `;
+                        });
+                        document.getElementById('transactionHistory').innerHTML = historyHTML;
+
+                        // Apply styles based on transaction type
+                        const transactionTypes = document.querySelectorAll('.transactionType');
+                        transactionTypes.forEach(element => {
+                            if (element.textContent === "Addition") {
+                                element.style.color = "green";
+                            } else if (element.textContent === "Deduction") {
+                                element.style.color = "red";
+                            }
+                        });
+                    } else {
+                        document.getElementById('transactionHistory').innerHTML = '<p>No transactions found.</p>';
+                    }
+                } else {
+                    document.getElementById('walletInfo').innerHTML = '<p>No wallet information found.</p>';
+                }
+            } catch (error) {
+                console.error("Error loading wallet info: ", error);
+                document.getElementById('walletInfo').innerHTML = '<p>Error loading wallet information.</p>';
+            }
+        }
+
+
+
+        loadWalletInfo();
+    </script>
+</body>
+
+</html>
