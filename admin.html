@@ -15,7 +15,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            
+
         }
 
         .container {
@@ -420,6 +420,7 @@
                     orderDetailsElement.innerHTML = `
                 <div class="user-mobile-number"><strong>Mobile Number:</strong> ${order.userMobileNumber}</div>
                 <div class="order-status"><strong>Status:</strong> ${order.status}</div>
+                <div class="order-status"><strong>Coupon Applied:</strong> ${order.couponApplied}</div>
                 <div class="order-total-amount"><strong>Total Amount:</strong> ₹${order.totalAmount}</div>
                 <div class="order-id"><strong>Order ID:</strong> ${order.orderId}</div>
                 
@@ -504,6 +505,8 @@
                     const editButton = document.createElement('button');
                     editButton.textContent = 'Edit';
                     editButton.style.backgroundColor = 'yellow';
+                    editButton.style.color = 'black';
+
 
                     editButton.onclick = () => {
                         document.querySelector('.confirm').style.display = 'block';
